@@ -18,12 +18,13 @@ import (
 )
 
 var (
-	wg     sync.WaitGroup
-	result chan Result
-	done   chan int
-	putnum = flag.Int("r", 10000, "input put number")
-	clinum = flag.Int("c", 1, "input cli number")
-	Timer  *time.Timer
+	wg       sync.WaitGroup
+	result   chan Result
+	done     chan int
+	putnum   = flag.Int("r", 10000, "input put number")
+	clinum   = flag.Int("c", 1, "input cli number")
+	endpoint = flag.String("end", "127.0.0.1:2379", "input ip port")
+	Timer    *time.Timer
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 			defer wg.Done()
 			rootContext := context.Background()
 			cli, err := v3.New(v3.Config{
-				Endpoints:   []string{"127.0.0.1:23793"},
+				Endpoints:   []string{*endpoint},
 				DialTimeout: 2 * time.Second,
 			})
 			fmt.Println("create cli")
