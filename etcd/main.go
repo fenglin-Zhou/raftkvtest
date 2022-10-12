@@ -30,8 +30,12 @@ var (
 func main() {
 	flag.Parse()
 	bar := pb.New(*putnum)
+	bar.SetRefreshRate(time.Second)
 	bar.Start()
-	result = make(chan Result, 16)
+	file, _ := os.Create("./bar.txt")
+	defer file.Close()
+	bar.SetWriter(file)
+	result = make(chan Result, 100)
 	done = make(chan int, 10)
 	for i := 0; i < *clinum; i++ {
 		wg.Add(1)
