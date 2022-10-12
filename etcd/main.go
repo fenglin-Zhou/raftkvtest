@@ -57,8 +57,8 @@ func main() {
 			// 初始化 kv
 			kvc := v3.NewKV(cli)
 			for bar.Current() < int64(*putnum) {
-				k := RandStr(5)
-				v := RandStr(5)
+				k := RandStr(8)
+				v := RandStr(128)
 				t1 := time.Now()
 				_, err := kvc.Put(rootContext, k, v)
 				if err != nil {
