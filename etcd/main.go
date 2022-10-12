@@ -156,13 +156,13 @@ func Report() {
 			lats = append(lats, res.end.Sub(res.start).Seconds())
 			sort.Float64s(lats)
 			i = i + 1
-			if i == 200 {
+			if i == 400 {
 				i = 0
-				newlats := lats[20:180]
+				newlats := lats[40:360]
 				for _, lat := range newlats {
 					total = total + lat
 				}
-				write.WriteString(fmt.Sprintf("%f\n", total/float64(160)))
+				write.WriteString(fmt.Sprintf("%f\n", total/float64(320)))
 				total = 0.0
 				lats = nil
 			}
