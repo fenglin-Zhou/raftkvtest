@@ -16,6 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/thanhpk/randstr v1.0.4 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.5 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

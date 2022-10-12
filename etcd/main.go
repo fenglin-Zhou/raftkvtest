@@ -5,16 +5,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"sort"
 	"sync"
 	"time"
-	"unsafe"
-
-	v3 "go.etcd.io/etcd/client/v3"
 
 	pb "github.com/cheggaaa/pb/v3"
+	"github.com/thanhpk/randstr"
+	v3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
@@ -27,6 +25,11 @@ var (
 	Timer    *time.Timer
 )
 
+type kv struct {
+	k string
+	v string
+}
+
 func main() {
 	flag.Parse()
 	bar := pb.New(*putnum)
@@ -36,6 +39,7 @@ func main() {
 	defer file.Close()
 	bar.SetWriter(file)
 	result = make(chan Result, 100)
+	req := make(chan kv, 100)
 	done = make(chan int, 10)
 	for i := 0; i < *clinum; i++ {
 		wg.Add(1)
@@ -56,11 +60,9 @@ func main() {
 			defer cli.Close()
 			// 初始化 kv
 			kvc := v3.NewKV(cli)
-			for bar.Current() < int64(*putnum) {
-				k := RandStr(8)
-				v := RandStr(128)
+			for op := range req {
 				t1 := time.Now()
-				_, err := kvc.Put(rootContext, k, v)
+				_, err := kvc.Put(rootContext, op.k, op.v)
 				if err != nil {
 				}
 				// if bar.Current() > 100 {
@@ -71,67 +73,16 @@ func main() {
 			}
 		}()
 	}
-	Timer = time.NewTimer(time.Millisecond * 1000)
 	go func() {
-		filepath := "./test1.txt"
-		file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			fmt.Println("文件打开失败", err)
+		for i := 0; i < *putnum; i++ {
+			req <- kv{randstr.String(8), randstr.String(128)}
 		}
-		//及时关闭file句柄
-		defer file.Close()
-		//写入文件时，使用带缓存的 *Writer
-		write := bufio.NewWriter(file)
-		total := bar.Current()
-		loop := true
-		for loop {
-			select {
-			case <-Timer.C:
-				write.WriteString(fmt.Sprintf("%d\n", bar.Current()-total))
-				total = bar.Current()
-				Timer.Reset(time.Millisecond * 1000)
-			case <-done:
-				Timer.Stop()
-				write.Flush()
-				loop = false
-			}
-		}
-		Timer.Stop()
+		close(req)
 	}()
 	go Report()
 	wg.Wait()
 	done <- 1
-	done <- 1
 	time.Sleep(time.Second * 5)
-}
-
-const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-var src = rand.NewSource(time.Now().UnixNano())
-
-const (
-	// 6 bits to represent a letter index
-	letterIdBits = 6
-	// All 1-bits as many as letterIdBits
-	letterIdMask = 1<<letterIdBits - 1
-	letterIdMax  = 63 / letterIdBits
-)
-
-func RandStr(n int) string {
-	b := make([]byte, n)
-	// A rand.Int63() generates 63 random bits, enough for letterIdMax letters!
-	for i, cache, remain := n-1, src.Int63(), letterIdMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = src.Int63(), letterIdMax
-		}
-		if idx := int(cache & letterIdMask); idx < len(letters) {
-			b[i] = letters[idx]
-			i--
-		}
-		cache >>= letterIdBits
-		remain--
-	}
-	return *(*string)(unsafe.Pointer(&b))
 }
 
 type Result struct {
